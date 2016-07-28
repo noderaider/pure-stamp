@@ -37,9 +37,16 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h3 id="pure-stamp">pure-stamp</h3>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h2 id="pure-stamp">pure-stamp</h2>
 <p>Creates an optimized pure compose function with dependencies tacked onto it for easy lib propagation.</p>
-<pre><code class="lang-jsx"><code class="source-code prettyprint">import React from &apos;react&apos;
+<p><a href="https://travis-ci.org/noderaider/pure-stamp"><img src="https://travis-ci.org/noderaider/pure-stamp.svg?branch=master" alt="Build Status"></a>
+<a href="https://codecov.io/gh/noderaider/pure-stamp"><img src="https://codecov.io/gh/noderaider/pure-stamp/branch/master/graph/badge.svg" alt="codecov"></a></p>
+<p><a href="https://nodei.co/npm/pure-stamp/"><img src="https://nodei.co/npm/pure-stamp.png?stars=true&amp;downloads=true" alt="NPM"></a></p>
+<h3 id="install">Install</h3>
+<p><code>npm install -S pure-stamp</code></p>
+<h3 id="usage">Usage</h3>
+<pre><code class="lang-jsx"><code class="source-code prettyprint">
+import React from &apos;react&apos;
 import shallowCompare from &apos;react-addons-shallow-compare&apos;
 import pureStamp from &apos;pure-stamp&apos;
 
@@ -49,11 +56,9 @@ const pure = pureStamp({ React, shallowCompare[, other[, libs ]] }[, defaults = 
 const { React, PropTypes, cloneElement, other, libs, defaults } = pure
 
 /** PureStamp is a React component with shouldComponentUpdate implemented (shallowCompare). */
-const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])
-
-
-See [react-stamp](https://github.com/stampit-org/react-stamp) documentation for compose for usage.</code>
+const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])</code>
 </code></pre>
+<p>See <a href="https://github.com/stampit-org/react-stamp">react-stamp</a> documentation on compose for usage.</p>
 </div>
 </div>
 
