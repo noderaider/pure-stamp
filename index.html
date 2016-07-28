@@ -56,7 +56,11 @@ const pure = pureStamp({ React, shallowCompare[, other[, libs ]] }[, defaults = 
 const { React, PropTypes, cloneElement, other, libs, defaults } = pure
 
 /** PureStamp is a React component with shouldComponentUpdate implemented (shallowCompare). */
-const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])</code>
+const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])
+
+
+/** Need to stop shouldComponentUpdate for a minute? */
+const ImpureComponent = pure.impure(...desc?: Stamp|ReactDesc|SpecDesc[])</code>
 </code></pre>
 <p>See <a href="https://github.com/stampit-org/react-stamp">react-stamp</a> documentation on compose for usage.</p>
 </div>

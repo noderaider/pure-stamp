@@ -53,7 +53,7 @@ const freezeValue = value =&gt; ({ value, enumerable: true, writable: false, con
 export default function pureStamp({ React, shallowCompare, ...deps } = {}, defaults = {}) {
   const { PropTypes, cloneElement } = React
   const { compose } = reactStamp(React)
-  const pure = Object.entries({ React, PropTypes, cloneElement, ...deps, defaults })
+  const pure = Object.entries({ React, PropTypes, cloneElement, ...deps, defaults, impure: compose })
     .reduce ( ( pure, [ depName, dep ]) =&gt; Object.defineProperty( pure
                                                                 , depName
                                                                 , freezeValue(dep)
@@ -61,7 +61,9 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
             , function pure (...desc) {
                 return compose(
                   { displayName: &apos;PureComponent&apos;
-                  , shouldComponentUpdate(nextProps, nextState) { return shallowCompare(this, nextProps, nextState) }
+                  , shouldComponentUpdate(nextProps, nextState) {
+                      return shallowCompare(this, nextProps, nextState)
+                    }
                   }
                   , ...desc
                 )
