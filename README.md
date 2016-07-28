@@ -29,7 +29,7 @@ const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])
 
 
 /** Need to stop shouldComponentUpdate for a minute? */
-const ImpureComponent = pure.impure(...desc?: Stamp|ReactDesc|SpecDesc[])
+const ImpureComponent = pure.impure (...desc?: Stamp|ReactDesc|SpecDesc[])
 
 ```
 
