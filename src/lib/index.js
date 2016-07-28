@@ -13,7 +13,14 @@ const freezeValue = value => ({ value, enumerable: true, writable: false, config
 export default function pureStamp({ React, shallowCompare, ...deps } = {}, defaults = {}) {
   const { PropTypes, cloneElement } = React
   const { compose } = reactStamp(React)
-  const pure = Object.entries({ React, PropTypes, cloneElement, ...deps, defaults, impure: compose })
+  const pure = Object.entries({ React
+                              , PropTypes
+                              , cloneElement
+                              , ...deps
+                              , defaults
+                              , impure: compose
+                              , destructure: () => [ { React, shallowCompare, ...deps }, defaults ]
+                              })
     .reduce ( ( pure, [ depName, dep ]) => Object.defineProperty( pure
                                                                 , depName
                                                                 , freezeValue(dep)
