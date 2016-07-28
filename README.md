@@ -27,6 +27,10 @@ const { React, PropTypes, cloneElement, other, libs, defaults } = pure
 /** PureStamp is a React component with shouldComponentUpdate implemented (shallowCompare). */
 const PureComponent = pure (...desc?: Stamp|ReactDesc|SpecDesc[])
 
+
+/** Need to stop shouldComponentUpdate for a minute? */
+const ImpureComponent = pure.impure(...desc?: Stamp|ReactDesc|SpecDesc[])
+
 ```
 
 
