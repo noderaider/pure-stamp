@@ -46,20 +46,24 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
                     /** key is connect key, strip and compose each of the present connect functions */
                     const { mapStateToProps, mapDispatchToProps, mergeProps } = value
 
+                    let lastMapState = mapState
+                    let lastMapDispatch = mapDispatch
+                    let lastMerge = merge
+
                     if(mapStateToProps) {
                       if(mapStateToProps.length === 1 && (!mapState || mapState.length === 1))
-                        mapState = state => ({ ...(mapState ? mapState(state) : {}), ...mapStateToProps(state) })
+                        mapState = state => ({ ...(lastMapState ? lastMapState(state) : {}), ...mapStateToProps(state) })
                       else
-                        mapState = (...args) => ({ ...(mapState ? mapState(...args) : {}), ...mapStateToProps(...args) })
+                        mapState = (...args) => ({ ...(lastMapState ? lastMapState(...args) : {}), ...mapStateToProps(...args) })
                     }
                     if(mapDispatchToProps) {
                       if(mapDispatchToProps.length === 1 && (!mapDispatch || mapDispatch.length === 1))
-                        mapDispatch = dispatch => ({ ...(mapDispatch ? mapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })
+                        mapDispatch = dispatch => ({ ...(lastMapDispatch ? lastMapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })
                       else
-                        mapDispatch = (...args) => ({ ...(mapDispatch ? mapDispatch(...args) : {}), ...mapDispatchToProps(...args) })
+                        mapDispatch = (...args) => ({ ...(lastMapDispatch ? lastMapDispatch(...args) : {}), ...mapDispatchToProps(...args) })
                     }
                     if(mergeProps)
-                      merge = (...args) => ({ ...(merge ? merge(...args) : {}), ...mergeProps(...args) })
+                      merge = (...args) => ({ ...(lastMerge ? lastMerge(...args) : {}), ...mergeProps(...args) })
                     if(value.options)
                       options = { ...(options || {}), ...value.options }
                     return reduced
