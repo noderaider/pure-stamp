@@ -19,7 +19,7 @@
   <a href="identifiers.html">Reference</a>
   <a href="source.html">Source</a>
   
-  <a data-ice="repoURL" href="https://github.com/cchamberlain/pure-stamp" class="repo-url-github">Repository</a>
+  <a data-ice="repoURL" href="https://github.com/noderaider/pure-stamp" class="repo-url-github">Repository</a>
   <div class="search-box">
   <span>
     <img src="./image/search.png">
@@ -40,6 +40,8 @@
 <div class="content" data-ice="content"><h1 data-ice="title">lib/index.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import reactStamp from &apos;react-stamp&apos;
 
+const CONNECT_KEY = &apos;connect&apos;
+
 const freezeValue = value =&gt; ({ value, enumerable: true, writable: false, configurable: false })
 
 /**
@@ -53,6 +55,9 @@ const freezeValue = value =&gt; ({ value, enumerable: true, writable: false, con
 export default function pureStamp({ React, shallowCompare, ...deps } = {}, defaults = {}) {
   const { PropTypes, cloneElement } = React
   const { compose } = reactStamp(React)
+
+  const HAS_CONNECT = Object.keys(deps).includes(CONNECT_KEY)
+
   const pure = Object.entries({ React
                               , PropTypes
                               , cloneElement
@@ -66,14 +71,54 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
                                                                 , freezeValue(dep)
                                                                 )
             , function pure (...desc) {
-                return compose(
+                let mapState
+                let mapDispatch
+                let merge
+                let options
+
+                /** Strips mapState, mapDispatch, mergeProps, and options from any &apos;connect&apos; keys on description object. */
+                function stripConnect (reactDesc) {
+                  return Object.entries(reactDesc).reduce((reduced, [ key, value ]) =&gt; {
+                    /** If key is not connect key, pass the prop along. */
+                    if(key !== CONNECT_KEY)
+                      return { ...reduced, [key]: value }
+
+                    /** key is connect key, strip and compose each of the present connect functions */
+                    const { mapStateToProps, mapDispatchToProps, mergeProps } = value
+
+                    if(mapStateToProps) {
+                      if(mapStateToProps.length === 1 &amp;&amp; (!mapState || mapState.length === 1))
+                        mapState = state =&gt; ({ ...(mapState ? mapState(state) : {}), ...mapStateToProps(state) })
+                      else
+                        mapState = (...args) =&gt; ({ ...(mapState ? mapState(...args) : {}), ...mapStateToProps(...args) })
+                    }
+                    if(mapDispatchToProps) {
+                      if(mapDispatchToProps.length === 1 &amp;&amp; (!mapDispatch || mapDispatch.length === 1))
+                        mapDispatch = dispatch =&gt; ({ ...(mapDispatch ? mapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })
+                      else
+                        mapDispatch = (...args) =&gt; ({ ...(mapDispatch ? mapDispatch(...args) : {}), ...mapDispatchToProps(...args) })
+                    }
+                    if(mergeProps)
+                      merge = (...args) =&gt; ({ ...(merge ? merge(...args) : {}), ...mergeProps(...args) })
+                    if(value.options)
+                      options = { ...(options || {}), ...value.options }
+                    return reduced
+                  }, {})
+                }
+
+                const Stamp = compose(
                   { displayName: &apos;PureComponent&apos;
                   , shouldComponentUpdate(nextProps, nextState) {
                       return shallowCompare(this, nextProps, nextState)
                     }
                   }
-                  , ...desc
+                    /** If redux connect dep passed and connect key detected, will strip out their mapStateToProps and mapDispatchToProps and apply them automatically. */
+                  , ...(HAS_CONNECT ? desc.map(stripConnect) : desc)
                 )
+
+                const useConnect = HAS_CONNECT &amp;&amp; (mapState || mapDispatch || merge)
+                return useConnect ? deps.connect(mapState, mapDispatch, merge, options)(Stamp)
+                                  : Stamp
               }
             )
   return Object.freeze(pure)
