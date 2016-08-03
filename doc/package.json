@@ -1,6 +1,6 @@
 {
   "name": "pure-stamp",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Creates an optimized pure compose function with dependencies tacked onto it for easy lib propagation.",
   "main": "lib/index.js",
   "scripts": {
@@ -38,12 +38,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cchamberlain/pure-stamp.git"
+    "url": "git+https://github.com/noderaider/pure-stamp.git"
   },
   "author": "Cole Chamberlain <cole.chamberlain@gmail.com> (https://github.com/cchamberlain)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cchamberlain/pure-stamp/issues"
+    "url": "https://github.com/noderaider/pure-stamp/issues"
   },
-  "homepage": "https://cchamberlain.github.io/pure-stamp"
+  "homepage": "https://pure-stamp.js.org"
 }
