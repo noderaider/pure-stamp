@@ -1,4 +1,5 @@
 import reactStamp from 'react-stamp'
+import profiler from './desc/profiler'
 
 const CONNECT_KEY = 'connect'
 
@@ -24,6 +25,7 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
                               , ...deps
                               , defaults
                               , impure: compose
+                              , profiler
                               , destructure: () => [ { React, shallowCompare, ...deps }, defaults ]
                               })
     .reduce ( ( pure, [ depName, dep ]) => Object.defineProperty( pure
