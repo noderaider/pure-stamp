@@ -1,8 +1,15 @@
 {
-  "coverage": "100%",
-  "expectCount": 1,
+  "coverage": "50%",
+  "expectCount": 2,
   "actualCount": 1,
   "files": {
+    "lib/desc/profiler.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        3
+      ]
+    },
     "lib/index.js": {
       "expectCount": 1,
       "actualCount": 1,
