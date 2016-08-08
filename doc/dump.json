@@ -10,31 +10,10 @@
     "access": null,
     "description": null,
     "lineNumber": 1,
-    "content": "const performance = window && window.performance || { now: () => process.hrtime }\r\n\r\nexport default function profile () {\r\n  return (\r\n    { displayName: 'Profiler'\r\n    , init() {\r\n        this.__performance__ = [ { init: performance.now() } ]\r\n        this.performance = key => this.__performance__.push({ [key]: performance.now() })\r\n        this.profile = () => console.table ? console.table(this.__performance__) : console.info(JSON.stringify(this.__performance__, null, 2))\r\n      }\r\n    , componentWillMount() {\r\n        this.performance('componentWillMount')\r\n      }\r\n    , componentWillUnmount() {\r\n        this.performance('componentWillUnmount')\r\n      }\r\n    , componentWillReceiveProps() {\r\n        this.performance('componentWillUpdate')\r\n      }\r\n    , componentWillUpdate() {\r\n        this.performance('componentDidUpdate')\r\n      }\r\n    , componentDidMount() {\r\n        this.performance('componentDidMount')\r\n      }\r\n    , componentDidUpdate() {\r\n        this.performance('componentDidUpdate')\r\n      }\r\n    }\r\n  )\r\n}\r\n"
+    "content": "export default function profile () {\r\n  const performance = typeof window === 'object' ? window.performance : { now: () => process.hrtime }\r\n  return (\r\n    { displayName: 'Profiler'\r\n    , init() {\r\n        this.__performance__ = [ { init: performance.now() } ]\r\n        this.performance = key => this.__performance__.push({ [key]: performance.now() })\r\n        this.profile = () => console.table ? console.table(this.__performance__) : console.info(JSON.stringify(this.__performance__, null, 2))\r\n      }\r\n    , componentWillMount() {\r\n        this.performance('componentWillMount')\r\n      }\r\n    , componentWillUnmount() {\r\n        this.performance('componentWillUnmount')\r\n      }\r\n    , componentWillReceiveProps() {\r\n        this.performance('componentWillUpdate')\r\n      }\r\n    , componentWillUpdate() {\r\n        this.performance('componentDidUpdate')\r\n      }\r\n    , componentDidMount() {\r\n        this.performance('componentDidMount')\r\n      }\r\n    , componentDidUpdate() {\r\n        this.performance('componentDidUpdate')\r\n      }\r\n    }\r\n  )\r\n}\r\n"
   },
   {
     "__docId__": 1,
-    "kind": "variable",
-    "static": true,
-    "variation": null,
-    "name": "performance",
-    "memberof": "lib/desc/profiler.js",
-    "longname": "lib/desc/profiler.js~performance",
-    "access": null,
-    "export": false,
-    "importPath": "pure-stamp/lib/desc/profiler.js",
-    "importStyle": null,
-    "description": null,
-    "lineNumber": 1,
-    "undocument": true,
-    "type": {
-      "types": [
-        "*"
-      ]
-    }
-  },
-  {
-    "__docId__": 2,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -46,7 +25,7 @@
     "importPath": "pure-stamp/lib/desc/profiler.js",
     "importStyle": "profile",
     "description": null,
-    "lineNumber": 3,
+    "lineNumber": 1,
     "undocument": true,
     "params": [],
     "return": {
@@ -57,7 +36,7 @@
     "generator": false
   },
   {
-    "__docId__": 3,
+    "__docId__": 2,
     "kind": "file",
     "static": true,
     "variation": null,
@@ -70,7 +49,7 @@
     "content": "import reactStamp from 'react-stamp'\r\nimport profiler from './desc/profiler'\r\n\r\nconst CONNECT_KEY = 'connect'\r\n\r\nconst freezeValue = value => ({ value, enumerable: true, writable: false, configurable: false })\r\n\r\n/**\r\n * Creates an optimized pure compose function with dependencies tacked onto it for easy lib propagation.\r\n * @param  {Object}         options.React           React dependency.\r\n * @param  {Object}         options.shallowCompare  React shallowCompare add-on dependency.\r\n * @param  {Array<Object>}  options.deps            Optional dependencies to propagate.\r\n * @param  {Object}         defaults                Optional configuration object to propagate.\r\n * @return {function}                                 pure compose function with propagated dependencies and defaults.\r\n */\r\nexport default function pureStamp({ React, shallowCompare, ...deps } = {}, defaults = {}) {\r\n  const { PropTypes, cloneElement } = React\r\n  const { compose } = reactStamp(React)\r\n\r\n  const HAS_CONNECT = Object.keys(deps).includes(CONNECT_KEY)\r\n\r\n  const pure = Object.entries({ React\r\n                              , PropTypes\r\n                              , cloneElement\r\n                              , ...deps\r\n                              , defaults\r\n                              , impure: compose\r\n                              , profiler\r\n                              , destructure: () => [ { React, shallowCompare, ...deps }, defaults ]\r\n                              })\r\n    .reduce ( ( pure, [ depName, dep ]) => Object.defineProperty( pure\r\n                                                                , depName\r\n                                                                , freezeValue(dep)\r\n                                                                )\r\n            , function pure (...desc) {\r\n                let mapState\r\n                let mapDispatch\r\n                let merge\r\n                let options\r\n\r\n                /** Strips mapState, mapDispatch, mergeProps, and options from any 'connect' keys on description object. */\r\n                function stripConnect (reactDesc) {\r\n                  return Object.entries(reactDesc).reduce((reduced, [ key, value ]) => {\r\n                    /** If key is not connect key, pass the prop along. */\r\n                    if(key !== CONNECT_KEY)\r\n                      return { ...reduced, [key]: value }\r\n\r\n                    /** key is connect key, strip and compose each of the present connect functions */\r\n                    const { mapStateToProps, mapDispatchToProps, mergeProps } = value\r\n\r\n                    let lastMapState = mapState\r\n                    let lastMapDispatch = mapDispatch\r\n                    let lastMerge = merge\r\n\r\n                    if(mapStateToProps) {\r\n                      if(mapStateToProps.length === 1 && (!mapState || mapState.length === 1))\r\n                        mapState = state => ({ ...(lastMapState ? lastMapState(state) : {}), ...mapStateToProps(state) })\r\n                      else\r\n                        mapState = (...args) => ({ ...(lastMapState ? lastMapState(...args) : {}), ...mapStateToProps(...args) })\r\n                    }\r\n                    if(mapDispatchToProps) {\r\n                      if(mapDispatchToProps.length === 1 && (!mapDispatch || mapDispatch.length === 1))\r\n                        mapDispatch = dispatch => ({ ...(lastMapDispatch ? lastMapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })\r\n                      else\r\n                        mapDispatch = (...args) => ({ ...(lastMapDispatch ? lastMapDispatch(...args) : {}), ...mapDispatchToProps(...args) })\r\n                    }\r\n                    if(mergeProps)\r\n                      merge = (...args) => ({ ...(lastMerge ? lastMerge(...args) : {}), ...mergeProps(...args) })\r\n                    if(value.options)\r\n                      options = { ...(options || {}), ...value.options }\r\n                    return reduced\r\n                  }, {})\r\n                }\r\n\r\n                const Stamp = compose(\r\n                  { displayName: 'PureComponent'\r\n                  , shouldComponentUpdate(nextProps, nextState) {\r\n                      return shallowCompare(this, nextProps, nextState)\r\n                    }\r\n                  }\r\n                    /** If redux connect dep passed and connect key detected, will strip out their mapStateToProps and mapDispatchToProps and apply them automatically. */\r\n                  , ...(HAS_CONNECT ? desc.map(stripConnect) : desc)\r\n                )\r\n\r\n                const useConnect = HAS_CONNECT && (mapState || mapDispatch || merge)\r\n                return useConnect ? deps.connect(mapState, mapDispatch, merge, options)(Stamp)\r\n                                  : Stamp\r\n              }\r\n            )\r\n  return Object.freeze(pure)\r\n}\r\n"
   },
   {
-    "__docId__": 4,
+    "__docId__": 3,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -91,7 +70,7 @@
     }
   },
   {
-    "__docId__": 5,
+    "__docId__": 4,
     "kind": "variable",
     "static": true,
     "variation": null,
@@ -112,7 +91,7 @@
     }
   },
   {
-    "__docId__": 6,
+    "__docId__": 5,
     "kind": "function",
     "static": true,
     "variation": null,
@@ -178,7 +157,7 @@
     "generator": false
   },
   {
-    "__docId__": 8,
+    "__docId__": 7,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -191,7 +170,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 9,
+    "__docId__": 8,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -204,7 +183,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 10,
+    "__docId__": 9,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -217,7 +196,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 11,
+    "__docId__": 10,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -230,7 +209,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 12,
+    "__docId__": 11,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -243,7 +222,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 13,
+    "__docId__": 12,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -256,7 +235,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 14,
+    "__docId__": 13,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -269,7 +248,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 15,
+    "__docId__": 14,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -282,7 +261,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 16,
+    "__docId__": 15,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -295,7 +274,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 17,
+    "__docId__": 16,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -308,7 +287,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 18,
+    "__docId__": 17,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -321,7 +300,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 19,
+    "__docId__": 18,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -334,7 +313,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 20,
+    "__docId__": 19,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -347,7 +326,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 21,
+    "__docId__": 20,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -360,7 +339,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 22,
+    "__docId__": 21,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -373,7 +352,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 23,
+    "__docId__": 22,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -386,7 +365,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 24,
+    "__docId__": 23,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -399,7 +378,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 25,
+    "__docId__": 24,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -412,7 +391,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 26,
+    "__docId__": 25,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -425,7 +404,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 27,
+    "__docId__": 26,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -438,7 +417,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 28,
+    "__docId__": 27,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -451,7 +430,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 29,
+    "__docId__": 28,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -464,7 +443,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 30,
+    "__docId__": 29,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -477,7 +456,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 31,
+    "__docId__": 30,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -490,7 +469,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 32,
+    "__docId__": 31,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -503,7 +482,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 33,
+    "__docId__": 32,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -516,7 +495,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 34,
+    "__docId__": 33,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -529,7 +508,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 35,
+    "__docId__": 34,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -542,7 +521,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 36,
+    "__docId__": 35,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -555,7 +534,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 37,
+    "__docId__": 36,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -568,7 +547,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 38,
+    "__docId__": 37,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -581,7 +560,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 39,
+    "__docId__": 38,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -594,7 +573,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 40,
+    "__docId__": 39,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -607,7 +586,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 41,
+    "__docId__": 40,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -620,7 +599,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 42,
+    "__docId__": 41,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -633,7 +612,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 43,
+    "__docId__": 42,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -646,7 +625,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 44,
+    "__docId__": 43,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -659,7 +638,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 45,
+    "__docId__": 44,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -672,7 +651,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 46,
+    "__docId__": 45,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -685,7 +664,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 47,
+    "__docId__": 46,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -698,7 +677,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 48,
+    "__docId__": 47,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -711,7 +690,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 49,
+    "__docId__": 48,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -724,7 +703,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 50,
+    "__docId__": 49,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -737,7 +716,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 51,
+    "__docId__": 50,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -750,7 +729,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 52,
+    "__docId__": 51,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -763,7 +742,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 53,
+    "__docId__": 52,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -776,7 +755,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 54,
+    "__docId__": 53,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -789,7 +768,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 56,
+    "__docId__": 55,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -802,7 +781,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 57,
+    "__docId__": 56,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -815,7 +794,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 58,
+    "__docId__": 57,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -828,7 +807,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 59,
+    "__docId__": 58,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -841,7 +820,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 60,
+    "__docId__": 59,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -854,7 +833,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 61,
+    "__docId__": 60,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -867,7 +846,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 62,
+    "__docId__": 61,
     "kind": "external",
     "static": true,
     "variation": null,
@@ -880,7 +859,7 @@
     "builtinExternal": true
   },
   {
-    "__docId__": 63,
+    "__docId__": 62,
     "kind": "external",
     "static": true,
     "variation": null,
