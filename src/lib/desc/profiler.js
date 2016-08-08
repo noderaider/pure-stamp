@@ -1,6 +1,5 @@
-const performance = window && window.performance || { now: () => process.hrtime }
-
 export default function profile () {
+  const performance = typeof window === 'object' ? window.performance : { now: () => process.hrtime }
   return (
     { displayName: 'Profiler'
     , init() {
