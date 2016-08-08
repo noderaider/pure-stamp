@@ -39,9 +39,8 @@
 </nav>
 
 <div class="content" data-ice="content"><h1 data-ice="title">lib/desc/profiler.js</h1>
-<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">const performance = window &amp;&amp; window.performance || { now: () =&gt; process.hrtime }
-
-export default function profile () {
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">export default function profile () {
+  const performance = typeof window === &apos;object&apos; ? window.performance : { now: () =&gt; process.hrtime }
   return (
     { displayName: &apos;Profiler&apos;
     , init() {

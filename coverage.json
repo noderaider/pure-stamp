@@ -7,7 +7,7 @@
       "expectCount": 1,
       "actualCount": 0,
       "undocumentLines": [
-        3
+        1
       ]
     },
     "lib/index.js": {
