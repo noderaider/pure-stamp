@@ -40,7 +40,7 @@
 
 <div class="content" data-ice="content"><h1 data-ice="title">lib/index.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import reactStamp from &apos;react-stamp&apos;
-import profiler from &apos;./desc/profiler&apos;
+import profile from &apos;./desc/profile&apos;
 
 const CONNECT_KEY = &apos;connect&apos;
 
@@ -66,7 +66,7 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
                               , ...deps
                               , defaults
                               , impure: compose
-                              , profiler
+                              , profile
                               , destructure: () =&gt; [ { React, shallowCompare, ...deps }, defaults ]
                               })
     .reduce ( ( pure, [ depName, dep ]) =&gt; Object.defineProperty( pure

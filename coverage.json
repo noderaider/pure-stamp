@@ -3,7 +3,7 @@
   "expectCount": 2,
   "actualCount": 1,
   "files": {
-    "lib/desc/profiler.js": {
+    "lib/desc/profile.js": {
       "expectCount": 1,
       "actualCount": 0,
       "undocumentLines": [

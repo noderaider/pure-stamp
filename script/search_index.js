@@ -1,8 +1,8 @@
 window.esdocSearchIndex = [
   [
-    "pure-stamp/lib/desc/profiler.js~profile",
+    "pure-stamp/lib/desc/profile.js~profile",
     "function/index.html#static-function-profile",
-    "<span>profile</span> <span class=\"search-result-import-path\">pure-stamp/lib/desc/profiler.js</span>",
+    "<span>profile</span> <span class=\"search-result-import-path\">pure-stamp/lib/desc/profile.js</span>",
     "function"
   ],
   [
@@ -342,9 +342,9 @@ window.esdocSearchIndex = [
     "external"
   ],
   [
-    "lib/desc/profiler.js",
-    "file/lib/desc/profiler.js.html",
-    "lib/desc/profiler.js",
+    "lib/desc/profile.js",
+    "file/lib/desc/profile.js.html",
+    "lib/desc/profile.js",
     "file"
   ],
   [
