@@ -1,7 +1,7 @@
 export default function profile () {
   const performance = typeof window === 'object' ? window.performance : { now: () => process.hrtime }
   return (
-    { displayName: 'Profiler'
+    { displayName: 'Profile'
     , init() {
         this.__performance__ = [ { init: performance.now() } ]
         this.performance = key => this.__performance__.push({ [key]: performance.now() })
@@ -24,6 +24,7 @@ export default function profile () {
       }
     , componentDidUpdate() {
         this.performance('componentDidUpdate')
+        this.profile()
       }
     }
   )
