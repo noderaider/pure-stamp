@@ -1,6 +1,6 @@
 {
   "name": "pure-stamp",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "description": "Creates an optimized pure compose function with dependencies tacked onto it for easy lib propagation.",
   "main": "lib/index.js",
   "scripts": {
