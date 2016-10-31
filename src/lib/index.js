@@ -1,7 +1,4 @@
 import reactStamp from 'react-stamp'
-import profile from './desc/profile'
-
-const CONNECT_KEY = 'connect'
 
 const freezeValue = value => ({ value, enumerable: true, writable: false, configurable: false })
 
@@ -17,7 +14,6 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
   const { PropTypes, cloneElement } = React
   const { compose } = reactStamp(React)
 
-  const HAS_CONNECT = Object.keys(deps).includes(CONNECT_KEY)
 
   const pure = Object.entries({ React
                               , PropTypes
@@ -25,67 +21,21 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
                               , ...deps
                               , defaults
                               , impure: compose
-                              , profile
                               , destructure: () => [ { React, shallowCompare, ...deps }, defaults ]
                               })
-    .reduce ( ( pure, [ depName, dep ]) => Object.defineProperty( pure
-                                                                , depName
-                                                                , freezeValue(dep)
-                                                                )
-            , function pure (...desc) {
-                let mapState
-                let mapDispatch
-                let merge
-                let options
-
-                /** Strips mapState, mapDispatch, mergeProps, and options from any 'connect' keys on description object. */
-                function stripConnect (reactDesc) {
-                  return Object.entries(reactDesc).reduce((reduced, [ key, value ]) => {
-                    /** If key is not connect key, pass the prop along. */
-                    if(key !== CONNECT_KEY)
-                      return { ...reduced, [key]: value }
-
-                    /** key is connect key, strip and compose each of the present connect functions */
-                    const { mapStateToProps, mapDispatchToProps, mergeProps } = value
-
-                    let lastMapState = mapState
-                    let lastMapDispatch = mapDispatch
-                    let lastMerge = merge
-
-                    if(mapStateToProps) {
-                      if(mapStateToProps.length === 1 && (!mapState || mapState.length === 1))
-                        mapState = state => ({ ...(lastMapState ? lastMapState(state) : {}), ...mapStateToProps(state) })
-                      else
-                        mapState = (...args) => ({ ...(lastMapState ? lastMapState(...args) : {}), ...mapStateToProps(...args) })
-                    }
-                    if(mapDispatchToProps) {
-                      if(mapDispatchToProps.length === 1 && (!mapDispatch || mapDispatch.length === 1))
-                        mapDispatch = dispatch => ({ ...(lastMapDispatch ? lastMapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })
-                      else
-                        mapDispatch = (...args) => ({ ...(lastMapDispatch ? lastMapDispatch(...args) : {}), ...mapDispatchToProps(...args) })
-                    }
-                    if(mergeProps)
-                      merge = (...args) => ({ ...(lastMerge ? lastMerge(...args) : {}), ...mergeProps(...args) })
-                    if(value.options)
-                      options = { ...(options || {}), ...value.options }
-                    return reduced
-                  }, {})
-                }
-
-                const Stamp = compose(
-                  { displayName: 'PureComponent'
-                  , shouldComponentUpdate(nextProps, nextState) {
-                      return shallowCompare(this, nextProps, nextState)
-                    }
-                  }
-                    /** If redux connect dep passed and connect key detected, will strip out their mapStateToProps and mapDispatchToProps and apply them automatically. */
-                  , ...(HAS_CONNECT ? desc.map(stripConnect) : desc)
-                )
-
-                const useConnect = HAS_CONNECT && (mapState || mapDispatch || merge)
-                return useConnect ? deps.connect(mapState, mapDispatch, merge, options)(Stamp)
-                                  : Stamp
-              }
-            )
+    .reduce (
+      ( pure, [ depName, dep ]) => Object.defineProperty( pure, depName, { value: dep, configurable: false, enumerable: true })
+    , function pure (...desc) {
+        const Stamp = compose(
+          { displayName: 'PureComponent'
+          , shouldComponentUpdate(nextProps, nextState) {
+              return shallowCompare(this, nextProps, nextState)
+            }
+          }
+          , ...desc
+        )
+        return Stamp
+      }
+    )
   return Object.freeze(pure)
 }
