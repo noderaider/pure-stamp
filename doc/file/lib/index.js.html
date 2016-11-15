@@ -40,9 +40,44 @@
 
 <div class="content" data-ice="content"><h1 data-ice="title">lib/index.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import reactStamp from &apos;react-stamp&apos;
-import profile from &apos;./desc/profile&apos;
+import _ from &apos;lodash&apos;
 
-const CONNECT_KEY = &apos;connect&apos;
+
+function isRequiredUpdateObject(o) {
+  return Array.isArray(o) || (o &amp;&amp; o.constructor === Object.prototype.constructor)
+}
+function deepDiff(o1, o2, p) {
+  const notify = (status) =&gt; {
+    console.warn(&apos;Update %s&apos;, status)
+    console.log(&apos;%cbefore&apos;, &apos;font-weight: bold&apos;, o1)
+    console.log(&apos;%cafter &apos;, &apos;font-weight: bold&apos;, o2)
+  }
+  if (!_.isEqual(o1, o2)) {
+    console.group(p)
+    if ([ o1, o2 ].every( (o) =&gt; typeof o === &apos;function&apos; )) {
+      notify(&apos;avoidable?&apos;)
+    } else if (![ o1, o2 ].every(isRequiredUpdateObject)) {
+      notify(&apos;required.&apos;)
+    } else {
+      const keys = _.union(Object.keys(o1), Object.keys(o2))
+      for (const key of keys) {
+        deepDiff(o1[key], o2[key], key)
+      }
+    }
+    console.groupEnd()
+  } else if (o1 !== o2) {
+    console.group(p)
+    notify(&apos;avoidable!&apos;)
+    if (_.isObject(o1) &amp;&amp; _.isObject(o2)) {
+      const keys = _.union(Object.keys(o1), Object.keys(o2))
+      for (const key of keys) {
+        deepDiff(o1[key], o2[key], key)
+      }
+    }
+    console.groupEnd()
+  }
+}
+
 
 const freezeValue = value =&gt; ({ value, enumerable: true, writable: false, configurable: false })
 
@@ -58,76 +93,55 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
   const { PropTypes, cloneElement } = React
   const { compose } = reactStamp(React)
 
-  const HAS_CONNECT = Object.keys(deps).includes(CONNECT_KEY)
+  const pureDesc = (
+    { displayName: &apos;PureComponent&apos;
+    , shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState)
+      }
+    }
+  )
 
-  const pure = Object.entries({ React
-                              , PropTypes
-                              , cloneElement
-                              , ...deps
-                              , defaults
-                              , impure: compose
-                              , profile
-                              , destructure: () =&gt; [ { React, shallowCompare, ...deps }, defaults ]
-                              })
-    .reduce ( ( pure, [ depName, dep ]) =&gt; Object.defineProperty( pure
-                                                                , depName
-                                                                , freezeValue(dep)
-                                                                )
-            , function pure (...desc) {
-                let mapState
-                let mapDispatch
-                let merge
-                let options
+  const profileDesc = (
+    { componentDidUpdate (prevProps, prevState) {
+        deepDiff (
+          { props: prevProps
+          , state: prevState
+          }
+        , { props: this.props
+          , state: this.state
+          }
+        , this.constructor.displayName
+        )
+      }
+    }
+  )
 
-                /** Strips mapState, mapDispatch, mergeProps, and options from any &apos;connect&apos; keys on description object. */
-                function stripConnect (reactDesc) {
-                  return Object.entries(reactDesc).reduce((reduced, [ key, value ]) =&gt; {
-                    /** If key is not connect key, pass the prop along. */
-                    if(key !== CONNECT_KEY)
-                      return { ...reduced, [key]: value }
-
-                    /** key is connect key, strip and compose each of the present connect functions */
-                    const { mapStateToProps, mapDispatchToProps, mergeProps } = value
-
-                    let lastMapState = mapState
-                    let lastMapDispatch = mapDispatch
-                    let lastMerge = merge
-
-                    if(mapStateToProps) {
-                      if(mapStateToProps.length === 1 &amp;&amp; (!mapState || mapState.length === 1))
-                        mapState = state =&gt; ({ ...(lastMapState ? lastMapState(state) : {}), ...mapStateToProps(state) })
-                      else
-                        mapState = (...args) =&gt; ({ ...(lastMapState ? lastMapState(...args) : {}), ...mapStateToProps(...args) })
-                    }
-                    if(mapDispatchToProps) {
-                      if(mapDispatchToProps.length === 1 &amp;&amp; (!mapDispatch || mapDispatch.length === 1))
-                        mapDispatch = dispatch =&gt; ({ ...(lastMapDispatch ? lastMapDispatch(dispatch) : {}), ...mapDispatchToProps(dispatch) })
-                      else
-                        mapDispatch = (...args) =&gt; ({ ...(lastMapDispatch ? lastMapDispatch(...args) : {}), ...mapDispatchToProps(...args) })
-                    }
-                    if(mergeProps)
-                      merge = (...args) =&gt; ({ ...(lastMerge ? lastMerge(...args) : {}), ...mergeProps(...args) })
-                    if(value.options)
-                      options = { ...(options || {}), ...value.options }
-                    return reduced
-                  }, {})
-                }
-
-                const Stamp = compose(
-                  { displayName: &apos;PureComponent&apos;
-                  , shouldComponentUpdate(nextProps, nextState) {
-                      return shallowCompare(this, nextProps, nextState)
-                    }
-                  }
-                    /** If redux connect dep passed and connect key detected, will strip out their mapStateToProps and mapDispatchToProps and apply them automatically. */
-                  , ...(HAS_CONNECT ? desc.map(stripConnect) : desc)
-                )
-
-                const useConnect = HAS_CONNECT &amp;&amp; (mapState || mapDispatch || merge)
-                return useConnect ? deps.connect(mapState, mapDispatch, merge, options)(Stamp)
-                                  : Stamp
-              }
-            )
+  function _pure (...desc) {
+    return compose( pureDesc, ...desc )
+  }
+  function impure (...desc) {
+    return compose( ...desc )
+  }
+  function profile (...desc) {
+    return compose ( pureDesc, profileDesc, ...desc )
+  }
+  function impureProfile (...desc) {
+    return compose ( profileDesc, ...desc )
+  }
+  const pure = Object.entries(
+    { React
+    , PropTypes
+    , cloneElement
+    , ...deps
+    , defaults
+    , impure
+    , profile
+    , impureProfile
+    , destructure: () =&gt; [ { React, shallowCompare, ...deps }, defaults ]
+    }
+  ).reduce ( ( pure, [ depName, dep ] ) =&gt; Object.defineProperty( pure, depName, { value: dep, configurable: false, enumerable: true })
+  , _pure
+  )
   return Object.freeze(pure)
 }
 </code></pre>
@@ -135,7 +149,7 @@ export default function pureStamp({ React, shallowCompare, ...deps } = {}, defau
 </div>
 
 <footer class="footer">
-  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.7)</span></a>
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.4.8)</span></a>
 </footer>
 
 <script src="script/search_index.js"></script>
