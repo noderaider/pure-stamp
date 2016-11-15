@@ -17,6 +17,7 @@
     "postrelease-doc": "git commit -am \"doc-release\" && git push --follow-tags"
   },
   "dependencies": {
+    "lodash": "^4.17.1",
     "react-stamp": "latest"
   },
   "devDependencies": {
